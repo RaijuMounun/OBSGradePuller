@@ -1,17 +1,21 @@
 import asyncio
 import os
+
+os.environ["PLAYWRIGHT_BROWSERS_PATH"] = os.path.join(os.getenv('LOCALAPPDATA'), 'ms-playwright')
+
 import platform
 import subprocess
 import json
 from typing import List, Callable, Optional
 from dataclasses import dataclass, asdict
-import time
+import keyring
 
 from playwright.async_api import async_playwright
 from rich.console import Console
 from rich.table import Table
 from rich.prompt import Prompt, Confirm
 from rich.panel import Panel
+
 
 # --- 1. ÖZEL HATA SINIFLARI (Exception Handling) ---
 class CaptchaError(Exception):
@@ -35,30 +39,42 @@ class UserConfig:
     username: str
     password: str
 
-# --- 3. CONFIG MANAGER ---
+# --- 3. CONFIG MANAGER (KEYRING VERSİYONU) ---
 class ConfigManager:
-    FILE_NAME = "user_config.json"
+    # Bu isimle Windows Kasa'sına kayıt açacak
+    SERVICE_ID = "MTUOBSGradePuller_Scraper" 
+    # Kullanıcı adı ve şifreyi tek string olarak birleştirip saklayacağız (Basitlik için)
+    # Format: "kullaniciadi|sifre"
 
     @staticmethod
     def load() -> Optional[UserConfig]:
-        if not os.path.exists(ConfigManager.FILE_NAME):
-            return None
         try:
-            with open(ConfigManager.FILE_NAME, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                return UserConfig(**data)
+            # İşletim sisteminden "user_data" anahtarını iste
+            stored_data = keyring.get_password(ConfigManager.SERVICE_ID, "user_data")
+            
+            if not stored_data:
+                return None
+            
+            # Veriyi "|" işaretinden ayır
+            username, password = stored_data.split("|", 1)
+            return UserConfig(username, password)
         except:
             return None
 
     @staticmethod
     def save(config: UserConfig):
-        with open(ConfigManager.FILE_NAME, "w", encoding="utf-8") as f:
-            json.dump(asdict(config), f)
+        # Veriyi birleştir: "123456|sifrem123"
+        combined_data = f"{config.username}|{config.password}"
+        
+        # Windows kasasına kaydet
+        keyring.set_password(ConfigManager.SERVICE_ID, "user_data", combined_data)
 
     @staticmethod
     def delete():
-        if os.path.exists(ConfigManager.FILE_NAME):
-            os.remove(ConfigManager.FILE_NAME)
+        try:
+            keyring.delete_password(ConfigManager.SERVICE_ID, "user_data")
+        except:
+            pass # Zaten yoksa hata vermesin
 
 # --- 4. ARAYÜZ KATMANI (UI) ---
 class TerminalUI:
