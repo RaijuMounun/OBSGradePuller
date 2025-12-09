@@ -13,8 +13,7 @@ class DisplayManager:
     def print_banner(self):
         self.console.clear()
         self.console.print(Panel(
-            "[bold cyan]🎓 OBS Grade Puller v3.0[/bold cyan]\n"
-            "[dim]Professional CLI Edition[/dim]",
+            "[bold cyan]🎓 OBS Grade Puller v3.0[/bold cyan]",
             style="bold white",
             border_style="cyan"
         ))

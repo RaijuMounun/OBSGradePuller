@@ -69,10 +69,8 @@ def main():
     login_success = False
     
     # Login Loading Animasyonu
-    with ui.console.status("[bold green]OBS Sistemine Bağlanılıyor...", spinner="dots"):
-        # Captcha callback: OBSClient'ın resim gösterip kod istemesi için UI fonksiyonunu veriyoruz
+    with ui.console.status("[bold green]OBS Sistemine Bağlanılıyor...", spinner="dots") as status:
         try:
-            # Not: display.ask_input, OBSClient içindeki callback imzasına uyuyor
             def captcha_handler(path):
                 # Resmi işletim sisteminde aç
                 import os, subprocess, platform
@@ -80,14 +78,26 @@ def main():
                 elif platform.system() == "Darwin": subprocess.call(("open", path))
                 else: subprocess.call(("xdg-open", path))
                 
-                # Kullanıcıdan input al (Status context'i dışında input almak lazım ama rich status inputu bloklamaz)
-                # Ancak temiz görünmesi için status mesajını geçici durdurmak zor, o yüzden inputu direkt istiyoruz.
                 ui.console.print(f"[yellow]Captcha açıldı ({path})...[/yellow]")
-                return ui.ask_input("Resimdeki Kodu Gir")
+                
+                # --- KRİTİK HAMLE: Animasyonu durdur ---
+                status.stop()
+                
+                # Şimdi temiz temiz input alabiliriz
+                code = ui.ask_input("İşlem sonucu: ")
+                
+                # Input bitti, animasyonu tekrar başlat
+                status.start()
+                # ---------------------------------------
+                
+                return code
 
             login_success = client.login(current_user, current_pass, captcha_handler)
             
         except Exception as e:
+            # Hata mesajı basmadan önce status'ü durdurmak gerekebilir ama
+            # with bloğu çıkışta otomatik kapatır. Yine de garanti olsun:
+            status.stop()
             ui.show_message(f"Bağlantı Hatası: {str(e)}", "red")
             return
 
@@ -132,7 +142,7 @@ def main():
 
     # 6. ÇIKIŞ
     ui.console.print("\n")
-    if ui.ask_choice("Ne yapmak istersin?", ["Yenile", "Çıkış"]) == "Yenile":
+    if ui.ask_choice("Ne yapmak istersin?", ["Kullanıcı Değiştir", "Çıkış"]) == "Kullanıcı Değiştir":
         main() # Rekürsif çağrı ile başa dön
     else:
         ui.show_message("İyi çalışmalar!", "yellow")
