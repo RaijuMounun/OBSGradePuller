@@ -13,6 +13,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 # Kendi modüllerimizi import ediyoruz
 from src.services.auth_manager import AuthManager
 from src.services.obs_client import OBSClient
+from src.services.captcha_solver.captcha_solver import CaptchaSolver
 from src.ui.display import DisplayManager
 
 def main():
@@ -72,6 +73,26 @@ def main():
     with ui.console.status("[bold green]OBS Sistemine Bağlanılıyor...", spinner="dots") as status:
         try:
             def captcha_handler(path):
+                # 1. Önce AI ile çözmeye çalış
+                ai_result = None
+                try:
+                    solver = CaptchaSolver()
+                    ai_result = solver.solve(path)
+                except Exception as err:
+                    # Model hatası varsa yut, manuele düş
+                    pass 
+                
+                # EĞER AI ÇÖZDÜYSE DİREKT DÖNDÜR (OTOMASYON)
+                if ai_result:
+                    ui.console.print(f"[bold cyan]🤖 AI Otomatik Çözdü: {ai_result}[/bold cyan]")
+                    # Kısa bir bekleme (opsiyonel, kullanıcının görmesi için)
+                    import time
+                    time.sleep(0.5)
+                    return ai_result
+
+                # --- AI BAŞARISIZ İSE MANUEL GİRİŞ ---
+                ui.console.print("[yellow]⚠️ AI Okuyamadı, Manuel Giriş Gerekiyor![/yellow]")
+                
                 # Resmi işletim sisteminde aç
                 import os, subprocess, platform
                 if platform.system() == "Windows": os.startfile(path)
@@ -83,8 +104,8 @@ def main():
                 # --- KRİTİK HAMLE: Animasyonu durdur ---
                 status.stop()
                 
-                # Şimdi temiz temiz input alabiliriz
-                code = ui.ask_input("İşlem sonucu: ")
+                prompt = "Captcha Kodu"
+                code = ui.ask_input(prompt)
                 
                 # Input bitti, animasyonu tekrar başlat
                 status.start()
