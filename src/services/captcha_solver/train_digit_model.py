@@ -3,7 +3,7 @@ from tensorflow.keras import layers, models
 import os
 
 DATASET_DIR = "dataset_digits"
-MODEL_PATH = "src/services/digit_model.h5"
+MODEL_PATH = "src/services/captcha_solver/digit_model.h5"
 IMG_SIZE = (32, 32)
 BATCH_SIZE = 16
 EPOCHS = 35

@@ -54,3 +54,4 @@ ios/Runner/Assets.xcassets/AppIcon.appiconset/
 
 # Visual Studio Code
 .vscode/
+/dataset_digits
