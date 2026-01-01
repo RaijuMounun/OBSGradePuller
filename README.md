@@ -7,7 +7,7 @@
 ![Status](https://img.shields.io/badge/Status-Stable-brightgreen)
 
 ## Yapılacaklar
--Aynı şirketin yaptığı OBS sistemlerini kullanan okullar için, okul seçimine izin veren bir dropdown. Kayıtlı hesaba okul bilgisi de eklenecek.
+- Aynı şirketin yaptığı OBS sistemlerini kullanan okullar için, okul seçimine izin veren bir dropdown. Kayıtlı hesaba okul bilgisi de eklenecek.
 
 ## Projenin Amacı
 
